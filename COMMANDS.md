@@ -7,17 +7,13 @@ docker exec order-service curl -s http://localhost:8081/api/v1/orders/health
 
 # Inventory Service health
 docker exec inventory-service curl -s http://localhost:8082/api/v1/inventory/health
-
-# API Gateway health (Spring Actuator)
-curl -s http://localhost:8080/actuator/health
 ```
 
 ## Create an Order (PowerShell quoting)
 ```bash
 # Replace <orderId>, <productId>, <quantity>, <price> as needed
-docker exec order-service curl -s -X POST http://localhost:8081/api/v1/orders \
-  -H "Content-Type: application/json" \
-  -d '{"orderId":"ORD-1001","productId":"PROD-101","quantity":10,"price":250.0}'
+docker exec order-service curl -s -X POST http://localhost:8081/api/v1/orders -H "Content-Type: application/json" -d '{\"orderId\":\"ORD-1001\",\"productId\":\"PROD-101\",\"quantity\":10,\"price\":250.0}'
+
 ```
 
 ## Query Stock for a Single Product
@@ -45,6 +41,18 @@ docker exec inventory-service curl -s http://localhost:8082/api/v1/inventory/met
 # Shows full HTTP response including status line
 curl -i http://localhost:8080/fallback/orders
 ```
+
+```bash
+docker exec order-service curl -s -i http://api-gateway:8080/fallback/orders
+```
+**Expected Output:**
+```text
+HTTP/1.1 503 Service Unavailable
+Content-Type: application/json
+
+{"message":"Order service is currently unavailable or high latency detected. Circuit breaker triggered fallback.","status":"CIRCUIT_BREAKER_OPEN","timestamp":...}
+```
+
 
 ## Observe DLQ (if a poisonous order was sent)
 ```bash
